@@ -1,6 +1,5 @@
 interface PluginConfig {
-	name: string;
-	url: any;
+	url: string;
 }
 
 export default PluginConfig;

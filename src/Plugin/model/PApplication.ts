@@ -1,97 +1,68 @@
 export enum ItemType {
-  article = "article",
-  category = "category",
+	article = "article",
+	category = "category",
 }
 
 export enum FileStatus {
-  modified = "modified",
-  delete = "delete",
-  new = "new",
-  rename = "rename",
-  conflict = "conflict",
+	modified = "modified",
+	delete = "delete",
+	new = "new",
+	rename = "rename",
+	conflict = "conflict",
 
-  /**
-   * ~ no changes
-   **/
-  current = "current",
+	/**
+	 * ~ no changes
+	 **/
+	current = "current",
 }
 
-export interface PPath {
-  extension: string;
-
-  get value(): string;
-  get name(): string;
-  get rootDirectory(): PPath;
-  get allExtensions(): string[];
-  get stripExtension(): string;
-  get nameWithExtension(): string;
-  get removeExtraSymbols(): PPath;
-  get parentDirectoryPath(): PPath;
-  get stripDotsAndExtension(): string;
-
-  compare(path: PPath): boolean;
-  endsWith(path: PPath): boolean;
-  includes(path: PPath): boolean;
-  startsWith(path: PPath): boolean;
-
-  join(...paths: PPath[]): PPath;
-  concat(...path: PPath[]): PPath;
-  subDirectory(path: PPath): PPath;
-  getRelativePath(path: PPath): PPath;
-  getNewName(newFileName: string): PPath;
-}
-
-export interface PItemRef {
-  path: PPath;
+interface ItemProps {
+	title: string;
+	tags: string[];
 }
 
 export interface PItem {
-  ref: PItemRef;
-  type: ItemType;
-  parent: PCategory;
-  getProp<T>(propName: string): T;
+	id: string;
+	type: ItemType;
+	parent: PCategory;
+	getProp<T extends keyof ItemProps>(propName: T): ItemProps[T];
 }
 
 export interface PArticle extends PItem {
-  content: string;
+	content: string;
+	type: ItemType.article;
 }
-export interface PCategory extends PArticle {
-  items: PItem[];
+export interface PCategory extends Omit<PArticle, "type"> {
+	items: PItem[];
+	type: ItemType.category;
 }
 
-export interface PCatalogEntry {
-  load(): Promise<PCatalog>;
-  getPathname(item?: PItem): Promise<string>;
-}
-export interface PCatalog extends PCatalogEntry {
-  getItems(): PItem[];
-  getName(): string;
-  getContentItems(): PItem[];
-  findArticleByItemRef(itemRef: PItemRef): PArticle;
+export interface PCatalog {
+	getName(): string;
+	getItems(): PItem[];
+	getItemById(id: string): PItem;
 }
 
 export interface PChangeCatalog {
-  catalog: PCatalog;
-  itemRef: PItemRef;
-  type: FileStatus;
-}
-export interface PCacheProvider {
-  get(key: string): Promise<string>;
-  delete(key: string): Promise<void>;
-  exists(key: string): Promise<boolean>;
-  set(key: string, value: string): Promise<void>;
+	itemId: string;
+	catalog: PCatalog;
+	type: FileStatus;
 }
 
-export interface PLibrary {
-  getCatalog(name: string): Promise<PCatalog>;
-  getCatalogEntry(name: string): PCatalogEntry;
-  getCatalogEntries(): Map<string, PCatalogEntry>;
-  addOnChangeRule(
-    callback: (catalogChanges: PChangeCatalog[]) => void | Promise<void>
-  ): void;
+export interface PStorage {
+	get(key: string): Promise<string>;
+	set(key: string, value: string): Promise<void>;
+	delete(key: string): Promise<void>;
+	exists(key: string): Promise<boolean>;
+}
+
+export interface PCatalogs {
+	get(name: string): Promise<PCatalog>;
+	getAll(): Promise<PCatalog[]>;
+	onUpdate(callback: (catalogChanges: PChangeCatalog[]) => void | Promise<void>): void;
 }
 
 export interface PApplication {
-  lib: PLibrary;
-  cacheProvider: PCacheProvider;
+	catalogs: PCatalogs;
+	storage: PStorage;
 }
