@@ -1,6 +1,7 @@
 import { PApplication } from "./PApplication";
 
 export interface PCommandConfig<P, O> {
+	name: string
 	do: (this: { _app: PApplication }, args: P) => O | Promise<O>;
 }
 

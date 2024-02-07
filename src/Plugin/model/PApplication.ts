@@ -1,4 +1,4 @@
-export enum ItemType {
+export enum ArticleType {
 	article = "article",
 	category = "category",
 }
@@ -16,35 +16,32 @@ export enum FileStatus {
 	current = "current",
 }
 
-interface ItemProps {
+interface ArticleProps {
 	title: string;
 	tags: string[];
 }
 
-export interface PItem {
+export interface PArticle {
 	id: string;
-	type: ItemType;
+	type: ArticleType.article;
 	parent: PCategory;
-	getProp<T extends keyof ItemProps>(propName: T): ItemProps[T];
+	content: string;
+	getProp<T extends keyof ArticleProps>(propName: T): ArticleProps[T];
 }
 
-export interface PArticle extends PItem {
-	content: string;
-	type: ItemType.article;
-}
 export interface PCategory extends Omit<PArticle, "type"> {
-	items: PItem[];
-	type: ItemType.category;
+	articles: PArticle[];
+	type: ArticleType.category;
 }
 
 export interface PCatalog {
 	getName(): string;
-	getItems(): PItem[];
-	getItemById(id: string): PItem;
+	getArticles(): PArticle[];
+	getArticleById(id: string): PArticle;
 }
 
 export interface PChangeCatalog {
-	itemId: string;
+	articleId: string;
 	catalog: PCatalog;
 	type: FileStatus;
 }
